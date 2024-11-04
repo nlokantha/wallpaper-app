@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { Pressable } from "react-native"
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons"
@@ -8,6 +8,10 @@ import { wp, hp } from "./../../helpers/commen"
 import Categories from "../../components/categories"
 import { apiCall } from "../../api"
 import ImageGrid from "../../components/imageGrid"
+import {debounce} from 'lodash'
+
+
+var page = 1;
 
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets()
@@ -21,7 +25,9 @@ const HomeScreen = () => {
     fetchImages()
   }, [])
 
-  const fetchImages = async (params = { page: 1 }, append = true) => {
+  const fetchImages = async (params = { page: 1 }, append = false) => {
+    console.log('params: ',params, append);
+    
     let res = await apiCall(params)
     if (res.success && res?.data?.hits) {
       if (append) {
@@ -30,12 +36,50 @@ const HomeScreen = () => {
         setImages([...res.data.hits])
       }
     }
-  }
+  } 
 
   const handleChangeCategory = (cat) => {
     setActiveCategory(cat)
+    clearSearch();
+    setImages([])
+    page=1;
+    let params ={
+      page,
+    }
+    if(cat) params.category = cat;
+    fetchImages(params,false)
+
   }
-  console.log("active category", activeCategory)
+
+  const handleSearch =(text)=>{
+    console.log('search for ',text)
+    setSearch(text);
+    if(text.length>2){
+      // search for this text
+      page = 1;
+      setImages([]);
+      setActiveCategory(null); // clear category when searching
+      fetchImages({page,q:text},false);
+    }
+    if(text==""){
+      // reset result
+      page = 1;
+      setImages([]);
+      setActiveCategory(null) // clear category when searching
+      searchInputRef?.current?.clear();
+      fetchImages({page,q:text},false);
+      
+    }
+  }
+
+  const handleTextDebounce = useCallback(debounce(handleSearch,400),[])
+
+  const clearSearch = ()=>{
+    setSearch("");
+    searchInputRef?.current?.clear();
+  }
+
+
 
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -64,13 +108,13 @@ const HomeScreen = () => {
           </View>
           <TextInput
             placeholder="Search for photos..."
-            value={search}
+            // value={search}
             ref={searchInputRef}
-            onChange={(value) => setSearch(value)}
+            onChangeText={handleTextDebounce}
             style={styles.searchInput}
           />
           {search && (
-            <Pressable style={styles.closeIcon}>
+            <Pressable onPress={()=>handleSearch("") } style={styles.closeIcon}>
               <Ionicons
                 name="close"
                 size={24}
