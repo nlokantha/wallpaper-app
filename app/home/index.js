@@ -8,10 +8,10 @@ import { wp, hp } from "./../../helpers/commen"
 import Categories from "../../components/categories"
 import { apiCall } from "../../api"
 import ImageGrid from "../../components/imageGrid"
-import {debounce} from 'lodash'
+import { debounce } from "lodash"
+import FiltersModal from "../../components/filtersModal"
 
-
-var page = 1;
+var page = 1
 
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets()
@@ -20,14 +20,22 @@ const HomeScreen = () => {
   const searchInputRef = useRef()
   const [activeCategory, setActiveCategory] = useState(null)
   const [images, setImages] = useState([])
+  const modalRef = useRef(null)
 
   useEffect(() => {
     fetchImages()
   }, [])
 
+  const openFiltersModal = () => {
+    modalRef?.current?.present()
+  }
+  const closeFiltersModal = () => {
+    modalRef?.current?.close()
+  }
+
   const fetchImages = async (params = { page: 1 }, append = false) => {
-    console.log('params: ',params, append);
-    
+    console.log("params: ", params, append)
+
     let res = await apiCall(params)
     if (res.success && res?.data?.hits) {
       if (append) {
@@ -36,50 +44,46 @@ const HomeScreen = () => {
         setImages([...res.data.hits])
       }
     }
-  } 
+  }
 
   const handleChangeCategory = (cat) => {
     setActiveCategory(cat)
-    clearSearch();
+    clearSearch()
     setImages([])
-    page=1;
-    let params ={
+    page = 1
+    let params = {
       page,
     }
-    if(cat) params.category = cat;
-    fetchImages(params,false)
-
+    if (cat) params.category = cat
+    fetchImages(params, false)
   }
 
-  const handleSearch =(text)=>{
-    console.log('search for ',text)
-    setSearch(text);
-    if(text.length>2){
+  const handleSearch = (text) => {
+    console.log("search for ", text)
+    setSearch(text)
+    if (text.length > 2) {
       // search for this text
-      page = 1;
-      setImages([]);
-      setActiveCategory(null); // clear category when searching
-      fetchImages({page,q:text},false);
-    }
-    if(text==""){
-      // reset result
-      page = 1;
-      setImages([]);
+      page = 1
+      setImages([])
       setActiveCategory(null) // clear category when searching
-      searchInputRef?.current?.clear();
-      fetchImages({page,q:text},false);
-      
+      fetchImages({ page, q: text }, false)
+    }
+    if (text == "") {
+      // reset result
+      page = 1
+      setImages([])
+      setActiveCategory(null) // clear category when searching
+      searchInputRef?.current?.clear()
+      fetchImages({ page, q: text }, false)
     }
   }
 
-  const handleTextDebounce = useCallback(debounce(handleSearch,400),[])
+  const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
 
-  const clearSearch = ()=>{
-    setSearch("");
-    searchInputRef?.current?.clear();
+  const clearSearch = () => {
+    setSearch("")
+    searchInputRef?.current?.clear()
   }
-
-
 
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -88,7 +92,7 @@ const HomeScreen = () => {
         <Pressable>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
-        <Pressable>
+        <Pressable onPress={openFiltersModal}>
           <FontAwesome6
             name="bars-staggered"
             size={22}
@@ -114,7 +118,10 @@ const HomeScreen = () => {
             style={styles.searchInput}
           />
           {search && (
-            <Pressable onPress={()=>handleSearch("") } style={styles.closeIcon}>
+            <Pressable
+              onPress={() => handleSearch("")}
+              style={styles.closeIcon}
+            >
               <Ionicons
                 name="close"
                 size={24}
@@ -132,6 +139,8 @@ const HomeScreen = () => {
         {/* images masongry grid */}
         <View>{images.length > 0 && <ImageGrid images={images} />}</View>
       </ScrollView>
+      {/* filters model */}
+      <FiltersModal modalRef={modalRef} />
     </View>
   )
 }
