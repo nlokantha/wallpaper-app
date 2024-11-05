@@ -21,6 +21,7 @@ const HomeScreen = () => {
   const [activeCategory, setActiveCategory] = useState(null)
   const [images, setImages] = useState([])
   const modalRef = useRef(null)
+  const [filters,setFilters] = useState(null);
 
   useEffect(() => {
     fetchImages()
@@ -31,6 +32,15 @@ const HomeScreen = () => {
   }
   const closeFiltersModal = () => {
     modalRef?.current?.close()
+  }
+
+  const applyFilters = ()=>{
+    console.log('applying filters');
+    closeFiltersModal();
+  }
+    const resetFilters = ()=>{
+    console.log('resetting filters');
+    closeFiltersModal();
   }
 
   const fetchImages = async (params = { page: 1 }, append = false) => {
@@ -79,6 +89,8 @@ const HomeScreen = () => {
   }
 
   const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
+
+  console.log('filters ',filters)
 
   const clearSearch = () => {
     setSearch("")
@@ -140,7 +152,13 @@ const HomeScreen = () => {
         <View>{images.length > 0 && <ImageGrid images={images} />}</View>
       </ScrollView>
       {/* filters model */}
-      <FiltersModal modalRef={modalRef} />
+      <FiltersModal 
+      filters={filters}
+      setFilters={setFilters}
+      onClose={closeFiltersModal}
+      onApply={applyFilters}
+      onReset={resetFilters}
+      modalRef={modalRef} />
     </View>
   )
 }
