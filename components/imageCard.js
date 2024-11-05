@@ -1,21 +1,26 @@
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import React from "react"
-import { Image } from 'expo-image';
-import { getImageSize, wp } from "../helpers/commen";
+import { Image } from "expo-image"
+import { getImageSize, wp } from "../helpers/commen"
 import { theme } from "./../constants/theme"
 
-const ImageCard = ({item,index,columns}) => {
-  const isLastInRow = ()=>{
-    return (index+1) % columns === 0;
+const ImageCard = ({ item, index, columns, router }) => {
+  const isLastInRow = () => {
+    return (index + 1) % columns === 0
   }
-  const getImageHeight =()=>{
-    let {imageHeight:height,imageWidth:width} = item;
-    return {height:getImageSize(height,width)}
+  const getImageHeight = () => {
+    let { imageHeight: height, imageWidth: width } = item
+    return { height: getImageSize(height, width) }
   }
   return (
-    <Pressable style={[styles.imageWrapper,!isLastInRow() && styles.spacing]}>
-       <Image
-        style={[styles.image,getImageHeight()]}
+    <Pressable
+      onPress={() =>
+        router.push({ pathname: "home/image", params: { ...item } })
+      }
+      style={[styles.imageWrapper, !isLastInRow() && styles.spacing]}
+    >
+      <Image
+        style={[styles.image, getImageHeight()]}
         source={item?.webformatURL}
         transition={100}
       />
@@ -27,18 +32,18 @@ const ImageCard = ({item,index,columns}) => {
 export default ImageCard
 
 const styles = StyleSheet.create({
-  image:{
-    height:300,
-    width:'100%'
+  image: {
+    height: 300,
+    width: "100%",
   },
-  imageWrapper:{
-    backgroundColor:theme.colors.greyBG,
-    borderRadius:theme.radius.xl,
-    borderCurve:'continuous', 
-    overflow:'hidden',
-    marginBottom:wp(2)
+  imageWrapper: {
+    backgroundColor: theme.colors.greyBG,
+    borderRadius: theme.radius.xl,
+    borderCurve: "continuous",
+    overflow: "hidden",
+    marginBottom: wp(2),
   },
-  spacing:{
-    marginRight:wp(2)
-  }
+  spacing: {
+    marginRight: wp(2),
+  },
 })

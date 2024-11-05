@@ -17,6 +17,7 @@ import { apiCall } from "../../api"
 import ImageGrid from "../../components/imageGrid"
 import { debounce } from "lodash"
 import FiltersModal from "../../components/filtersModal"
+import { useRouter } from "expo-router"
 
 var page = 1
 
@@ -28,7 +29,9 @@ const HomeScreen = () => {
   const [activeCategory, setActiveCategory] = useState(null)
   const [images, setImages] = useState([])
   const modalRef = useRef(null)
+  const scrollRef = useRef(null)
   const [filters, setFilters] = useState(null)
+  const router = useRouter()
 
   useEffect(() => {
     fetchImages()
@@ -129,6 +132,12 @@ const HomeScreen = () => {
       fetchImages({ page, q: text, ...filters }, false)
     }
   }
+  const handleScroll = (event) => {
+    console.log("scroll event fired")
+  }
+  const handleScrollUp = () => {
+    scrollRef?.current?.scrollTo({ y: 0, animated: true })
+  }
 
   const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
 
@@ -143,7 +152,7 @@ const HomeScreen = () => {
     <View style={[styles.container, { paddingTop }]}>
       {/* header */}
       <View style={styles.header}>
-        <Pressable>
+        <Pressable onPress={handleScrollUp}>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
         <Pressable onPress={openFiltersModal}>
@@ -155,6 +164,9 @@ const HomeScreen = () => {
         </Pressable>
       </View>
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={5}
+        ref={scrollRef}
         contentContainerStyle={{ gap: 15 }}
         showsVerticalScrollIndicator={false}
       >
@@ -224,7 +236,9 @@ const HomeScreen = () => {
         )}
 
         {/* images masongry grid */}
-        <View>{images.length > 0 && <ImageGrid images={images} />}</View>
+        <View>
+          {images.length > 0 && <ImageGrid images={images} router={router} />}
+        </View>
         {/* loading */}
         <View
           style={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}
