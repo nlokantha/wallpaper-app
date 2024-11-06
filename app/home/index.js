@@ -32,6 +32,7 @@ const HomeScreen = () => {
   const scrollRef = useRef(null)
   const [filters, setFilters] = useState(null)
   const router = useRouter()
+  const [isEndReached,setIsEndReached] = useState(false);
 
   useEffect(() => {
     fetchImages()
@@ -87,7 +88,7 @@ const HomeScreen = () => {
     fetchImages(params, false)
   }
 
-  const fetchImages = async (params = { page: 1 }, append = false) => {
+  const fetchImages = async (params = { page: 1 }, append = true) => {
     console.log("params: ", params, append)
 
     let res = await apiCall(params)
@@ -133,7 +134,30 @@ const HomeScreen = () => {
     }
   }
   const handleScroll = (event) => {
-    console.log("scroll event fired")
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+    const scrollOffset = event.nativeEvent.contentOffset.y;
+    const bottomPosition = contentHeight - scrollViewHeight;
+
+    if(scrollOffset>= bottomPosition-1){
+      if(!isEndReached){
+        setIsEndReached(true)
+        console.log('reached the bottom of scrollview');
+        //fetch more image
+        ++page;
+        let params = {
+          page,
+          ...filters
+        }
+        if(activeCategory) params.category = activeCategory;
+        if(search) params.q = search;
+        fetchImages(params);
+
+      }
+      
+    }else if(isEndReached){
+      setIsEndReached(false);
+    }
   }
   const handleScrollUp = () => {
     scrollRef?.current?.scrollTo({ y: 0, animated: true })
@@ -141,7 +165,7 @@ const HomeScreen = () => {
 
   const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
 
-  console.log("filters ", filters)
+  // console.log("filters ", filters)
 
   const clearSearch = () => {
     setSearch("")
